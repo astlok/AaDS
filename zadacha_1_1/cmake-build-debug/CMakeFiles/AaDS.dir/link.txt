@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/c++  -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/AaDS.dir/src/main.cpp.o CMakeFiles/AaDS.dir/src/max_sum_index.cpp.o  -o AaDS 

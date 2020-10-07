@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/max_sum_index.h
+vector
+-
+
+/Users/astlok/Documents/IT/AaDS/zadacha_1_1/src/max_sum_index.cpp
+max_sum_index.h
+/Users/astlok/Documents/IT/AaDS/zadacha_1_1/src/max_sum_index.h
+
