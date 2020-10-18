@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/nearest_index.h
+vector
+-
+
+/Users/astlok/Documents/IT/AaDS/zadacha_2.4/src/nearest_index.cpp
+nearest_index.h
+/Users/astlok/Documents/IT/AaDS/zadacha_2.4/src/nearest_index.h
+
