@@ -5,7 +5,7 @@
 
 class Queue {
 public:
-    Queue(): data(), free_cell(-1), head(0), tail(0) {}
+    Queue(): buffer(nullptr), buffer_size(0), head(0), tail(0), size(0) {}
 
     ~Queue() = default;
 
@@ -14,44 +14,55 @@ public:
     Queue &operator=(const Queue &other) = delete;
 
     void push(const int elem) {
-        if (head == tail + 1) {
-            data.move(head, tail);
-            tail = data.size() - 1;
-            head = 0;
-            free_cell = -1;
+        if (size == buffer_size) {
+            increase_buffer();
         }
-        if (free_cell != -1) {
-            data[free_cell] = elem;
-            tail = free_cell;
-            if (data[free_cell + 1] == -1) {
-                free_cell++;
-            }
-        } else {
-            data.add(elem);
-            tail = data.size();
-        }
+        tail = (tail + 1) % buffer_size;
+        buffer[tail] = elem;
+        ++size;
     }
 
     int pop(const int elem) {
-        if (data.is_empty() || data[head] != elem) {
+        if (size == 0) {
             return -1;
         }
-        int result = data[head];
-        data[head++] = -1;
-        if (free_cell == -1 || free_cell > (head - 1)) {
-            free_cell = head - 1;
-        }
-        if (head == tail || (head >= tail && data[tail] == -1)) {
-            head = tail = free_cell = 0;
-        }
+        int result = buffer[head];
+        head = (head + 1) % buffer_size;
+        --size;
         return result;
     }
 
+    void increase_buffer() {
+        int *temp = buffer;
+        if (buffer_size == 0) {
+            buffer = new int [1];
+        } else {
+            buffer = new int [buffer_size * 2];
+        }
+
+        for (int i = 0; i < buffer_size; ++i) {
+            buffer[i] = temp[head++ % buffer_size];
+        }
+        head = 0;
+        tail = buffer_size - 1;
+
+        if (buffer_size == 0) {
+            buffer_size = 1;
+        } else {
+            buffer_size *= 2;
+        }
+        delete [] temp;
+    }
+
+    bool is_empty() const {
+        return head == tail;
+    }
 private:
-    D_Array data;
-    int free_cell;
+    int *buffer;
+    int buffer_size;
     int head;
     int tail;
+    int size;
 };
 
 #endif

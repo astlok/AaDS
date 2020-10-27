@@ -17,6 +17,9 @@ public:
     int size() const {
         return real_size;
     }
+    int buff_size() const {
+        return buffer_size;
+    };
 
     int operator[](int index) const {
         assert(index >= 0 && index < real_size && buffer != nullptr);
@@ -57,19 +60,6 @@ public:
         return real_size == 0;
     }
 
-    void move(int head, int tail) {
-        D_Array temp;
-        for (int i = 0; i < head; ++i) {
-            temp.add((*this)[i]);
-        }
-        for (int i = 0; i < real_size - head; ++i) {
-            (*this).buffer[i] = (*this).buffer[i + head];
-        }
-        for (int i = 0; i < temp.size(); ++i) {
-            (*this).buffer[i + real_size - head] = temp[i];
-        }
-        increase_buffer();
-    }
 private:
     int *buffer;
     int real_size;
