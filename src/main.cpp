@@ -1,64 +1,66 @@
 #include <iostream>
-#include <sstream>
 
-#include "Heap.cpp"
 #include "D_Array.cpp"
 #include "merge_sort.cpp"
 
-struct int_comporator {
-    bool operator()(int &l, int &r) {
-        return l < r;
+typedef enum state {
+    BEGIN,
+    END,
+} state_t;
+
+struct Point {
+    int coor;
+    state_t state;
+};
+
+struct point_comparator {
+    bool operator()(const Point &l, const Point &r) {
+        return l.coor < r.coor;
     }
 };
-
-struct Train {
-    int arrive;
-    int departure;
-
-    bool operator==(Train &rhs) const {
-        return this->departure == rhs.departure;
-    }
-};
-
-struct train_comporator {
-    bool operator()(const Train &l, const Train &r) {
-        return l.departure > r.departure;
-    }
-};
-
-struct Segment {
-    int l;
-    int r;
-};
-
-struct segment_comparator {
-    bool operator()(const Segment &l, const Segment &r) {
-        return l.l < r.l;
-    }
-};
-
-bool is_point_in_segment(int i, Segment segment) {
-    return (i >= segment.l && i <= segment.r);
-}
 
 void run(std::istream &is, std::ostream &os) {
-    D_Array<Segment> array;
-    array.add({1, 4});
-    array.add({7 , 8});
-    array.add({2, 5});
+    int n = 0;
 
-    merge_sort(array, 0, array.size() - 1, segment_comparator());
+    is >> n;
+    D_Array<Point> array;
+
+    for (int i = 0; i < n; ++i) {
+        Point point;
+        is >> point.coor;
+        point.state = BEGIN;
+        array.add(point);
+        is >> point.coor;
+        point.state = END;
+        array.add(point);
+    }
+
+    merge_sort(array, 0, array.size() - 1, point_comparator());
+
+    int layers_count = 0;
+    int layers_lenght = 0;
+    int last_first_coor = 0;
     for (int i = 0; i < array.size(); ++i) {
-        os << "{" << array[i].l << ", " << array[i].r << "} ";
+        if (array[i].state == BEGIN) {
+            if (layers_count == 0) {
+                last_first_coor = array[i].coor;
+            } else if (layers_count == 1) {
+                layers_lenght = layers_lenght + array[i].coor - last_first_coor;
+                last_first_coor = 0;
+            }
+            layers_count++;
+        } else if (array[i].state == END) {
+            if (layers_count == 1) {
+                layers_lenght = layers_lenght + array[i].coor - last_first_coor;
+                last_first_coor = 0;
+            }
+            layers_count--;
+            if (layers_count == 1) {
+                last_first_coor = array[i].coor;
+            }
+        }
     }
-    int max_layers = 0;
-
-
-    for (int j = 0; j < array.size(); ++j) {
-        if
-    }
-
-    os << std::endl << max_layers;
+    os << layers_lenght;
 
 }
 
