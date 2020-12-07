@@ -30,13 +30,17 @@ size_t hash_str(const std::string &str) {
 class HashTable {
 
 public:
-    HashTable() : buckets_count(8), items_count(0), elems(buckets_count) {
-        for (auto elem: elems) {
-            elem.state = EMPTY;
-        }
-    }
+    HashTable() : buckets_count(0), items_count(0), elems(buckets_count) {}
 
     bool insert(const std::string &str) {
+        if (buckets_count == 0) {
+            buckets_count = 8;
+            elems.resize(buckets_count);
+            for (auto elem: elems) {
+                elem.state = EMPTY;
+            }
+        }
+
         if (has(str)) {
             return false;
         }
