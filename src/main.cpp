@@ -50,8 +50,9 @@ public:
         return false;
     }
 
-    void del(const T &key) {
-        root = del_aux(root, key);
+    void del(const int number) {
+        std::shared_ptr<Node<T>> node = get_node_by_number(root, number);
+        root = del_aux(root, node->key);
     }
 private:
     std::shared_ptr<Node<T>> add_aux(std::shared_ptr<Node<T>> node, const T &key, size_t &position) {
@@ -67,6 +68,24 @@ private:
             node->left = add_aux(node->left, key, position);
         }
         return balance(node);
+    }
+
+    std::shared_ptr<Node<T>> get_node_by_number(std::shared_ptr<Node<T>> node, const int number) {
+        if (!node->left) {
+            if (number == 0) {
+                return node;
+            } else {
+                return get_node_by_number(node->right, number - 1);
+            }
+        } else {
+            if (node->left->nodes_count == number) {
+                return node;
+            }
+            if (node->left->nodes_count > number) {
+                return get_node_by_number(node->left, number);
+            }
+            return get_node_by_number(node->right, number - node->left->nodes_count  - 1);
+        }
     }
 
     std::shared_ptr<Node<T>> del_aux(std::shared_ptr<Node<T>> node, const T &key) {
@@ -216,8 +235,8 @@ void test1() {
     assert(output.str() == "0 0 2 1");
 }
 int main() {
-//    run(std::cin, std::cout);
-    test1();
+    run(std::cin, std::cout);
+//    test1();
 
 }
 
