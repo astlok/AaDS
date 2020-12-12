@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <cassert>
 
 template <typename T>
 struct DefaultComparator {
@@ -52,6 +53,9 @@ public:
 
     void del(const int number) {
         std::shared_ptr<Node<T>> node = get_node_by_number(root, number);
+        if (node == nullptr) {
+            return;
+        }
         root = del_aux(root, node->key);
     }
 private:
@@ -59,7 +63,6 @@ private:
         if (node == nullptr) {
             return std::make_shared<Node<T>>(key);
         }
-//        ++(node->nodes_count);
         int res = comp(node->key, key);
         if (res == -1) {
             node->right = add_aux(node->right, key, position);
@@ -70,22 +73,25 @@ private:
         return balance(node);
     }
 
-    std::shared_ptr<Node<T>> get_node_by_number(std::shared_ptr<Node<T>> node, const int number) {
-        if (!node->left) {
-            if (number == 0) {
-                return node;
-            } else {
-                return get_node_by_number(node->right, number - 1);
-            }
-        } else {
-            if (node->left->nodes_count == number) {
-                return node;
-            }
-            if (node->left->nodes_count > number) {
-                return get_node_by_number(node->left, number);
-            }
-            return get_node_by_number(node->right, number - node->left->nodes_count  - 1);
+    std::shared_ptr<Node<T>> get_node_by_number(std::shared_ptr<Node<T>> node, int number) {
+        if (number >= node->nodes_count) {
+            return nullptr;
         }
+
+        while (node) {
+            int right_num = node->right ? node->right->nodes_count : 0;
+            if (number == right_num) {
+                return node;
+            } else if (number > right_num){
+                node = node->left;
+                number = number - right_num - 1;
+                continue;
+            } else {
+                node = node->right;
+                continue;
+            }
+        }
+        return nullptr;
     }
 
     std::shared_ptr<Node<T>> del_aux(std::shared_ptr<Node<T>> node, const T &key) {
@@ -107,7 +113,7 @@ private:
 
             std::shared_ptr<Node<T>> min = find_min(right);
             min->right = remove_min(right);
-            min = left;
+            min->left = left;
             return balance(min);
         }
         return balance(node);
@@ -129,7 +135,6 @@ private:
         node->nodes_count = get_nodes_count(node->left) + get_nodes_count(node->right) + 1;
     }
 
-
     int get_balance(std::shared_ptr<Node<T>> node) {
         return get_height(node->right) - get_height(node->left);
     }
@@ -137,16 +142,13 @@ private:
     std::shared_ptr<Node<T>> balance(std::shared_ptr<Node<T>> node) {
         fix_height(node);
         fix_node_count(node);
-        switch (get_balance(node))
-        {
-            case 2:
-            {
+        switch (get_balance(node)) {
+            case 2: {
                 if (get_balance(node->right) < 0)
                     node->right = rotate_right(node->right);
                 return rotate_left(node);
             }
-            case -2:
-            {
+            case -2: {
                 if (get_balance(node->left) > 0)
                     node->left = rotate_left(node->left);
                 return rotate_right(node);
@@ -232,90 +234,81 @@ void test1() {
     input << "2 " << "1" << std::endl;
     input << "1 " << "150" << std::endl;
     run(input, output);
-    assert(output.str() == "0 0 2 1");
+    assert(output.str() == "0\n0\n2\n1\n");
 }
+
+void test2() {
+    std::stringstream input;
+    std::stringstream output;
+    input << "10" << std::endl;
+    input << "1 " << "100" << std::endl;
+    input << "2 " << "0" << std::endl;
+    input << "1 " << "10" << std::endl;
+    input << "1 " << "12" << std::endl;
+    input << "1 " << "9" << std::endl;
+    input << "1 " << "3" << std::endl;
+    input << "2 " << "1" << std::endl;
+    input << "1 " << "8" << std::endl;
+    input << "2 " << "1" << std::endl;
+    input << "1 " << "11" << std::endl;
+    run(input, output);
+    assert(output.str() == "0\n0\n0\n2\n3\n2\n1\n");
+}
+
+void test3() {
+    std::stringstream input;
+    std::stringstream output;
+    input << "32" << std::endl;
+    for (int i = 0; i < 20; ++i) {
+        input << "1 " << i << std::endl;
+    }
+    for (int i = 0; i < 10; ++i) {
+        input << "2 " << 0 << std::endl;
+    }
+
+    input << "1 " << "12" << std::endl;
+    input << "1 " << "11" << std::endl;
+    run(input, output);
+    assert(output.str() == "0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n");
+}
+
+void test4() {
+    std::stringstream input;
+    std::stringstream output;
+    input << "24" << std::endl;
+    input << "1 " << "12" << std::endl;
+    input << "1 " << "11" << std::endl;
+    input << "1 " << "10" << std::endl;
+    input << "1 " << "3" << std::endl;
+    input << "1 " << "8" << std::endl;
+    input << "1 " << "5" << std::endl;
+    input << "1 " << "15" << std::endl;
+    input << "1 " << "28" << std::endl;
+    input << "1 " << "1" << std::endl;
+    input << "1 " << "19" << std::endl;
+    input << "1 " << "13" << std::endl;
+    input << "1 " << "2" << std::endl;
+    input << "1 " << "22" << std::endl;
+    input << "1 " << "6" << std::endl;
+    input << "2 " << "6" << std::endl;
+    input << "1 " << "11" << std::endl;
+    input << "2 " << "6" << std::endl;
+    input << "2 " << "3" << std::endl;
+    input << "2 " << "8" << std::endl;
+    input << "1 " << "16" << std::endl;
+    input << "1 " << "7" << std::endl;
+    input << "1 " << "4" << std::endl;
+    input << "1 " << "0" << std::endl;
+    input << "1 " << "29" << std::endl;
+
+    run(input, output);
+    assert(output.str() == "0\n1\n2\n3\n3\n4\n0\n0\n8\n1\n3\n10\n1\n9\n6\n3\n8\n10\n14\n0\n");
+}
+
 int main() {
     run(std::cin, std::cout);
-//    test1();
-
+    test1();
+    test2();
+    test3();
+    test4();
 }
-
-//10
-//1 100
-//0
-//2 100
-//1 10
-//0
-//1 12
-//0
-//1 9
-//2
-//1 3
-//3
-//2 10
-//1 8
-//1
-//2 9
-//1 11
-
-//10
-//1 100
-//2 100
-//1 10
-//1 12
-//1 9
-//1 3
-//2 10
-//1 8
-//2 9
-//1 11
-
-
-
-//60
-//1 1
-//0
-//1 2
-//0
-//1 3
-//0
-//1 4
-//0
-//1 5
-//0
-//1 6
-//0
-//1 7
-//0
-//1 8
-//0
-//1 9
-//0
-//1 10
-//0
-//1 11
-//0
-//1 12
-//0
-//1 13
-//0
-//1 14
-//0
-//1 15
-//0
-//1 16
-//0
-//1 17
-//0
-//1 18
-//0
-//1 19
-//0
-//1 20
-//0
-//2 1
-//1 1
-//19
-//2 18
-//1 18
-//0
