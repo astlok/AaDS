@@ -118,8 +118,8 @@ private:
                 return left;
             }
 
-            std::shared_ptr<Node<T>> min = find_min(right);
-            min->right = remove_min(right);
+            std::shared_ptr<Node<T>> min;
+            min->right = find_and_remove_min(right, &min);
             min->left = left;
             return balance(min);
         }
@@ -146,6 +146,15 @@ private:
         return get_height(node->right) - get_height(node->left);
     }
 
+    std::shared_ptr<Node<T>> find_and_remove_min(std::shared_ptr<Node<T>> node, std::shared_ptr<Node<T>> *min) {
+        if (!node->left) {
+            *min = node;
+            return node->right;
+        }
+        node->left = find_and_remove_min(node->left, min);
+        return balance(node);
+    }
+
     std::shared_ptr<Node<T>> balance(std::shared_ptr<Node<T>> node) {
         fix_height(node);
         fix_node_count(node);
@@ -163,19 +172,6 @@ private:
             default:
                 return node;
         }
-    }
-    std::shared_ptr<Node<T>> find_min(std::shared_ptr<Node<T>> node) {
-        while(node->left) {
-            node = node->left;
-        }
-        return node;
-    }
-    std::shared_ptr<Node<T>> remove_min(std::shared_ptr<Node<T>> node) {
-        if (node->left == nullptr) {
-            return node->right;
-        }
-        node->left = remove_min(node->left);
-        return balance(node);
     }
 
     std::shared_ptr<Node<T>> rotate_left(std::shared_ptr<Node<T>> node) {
