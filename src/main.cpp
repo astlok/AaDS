@@ -1,13 +1,24 @@
+//Написать алгоритм для решения игры в “пятнашки”. Решением задачи является приведение к виду:
+//[ 1  2  3  4 ]
+//[ 5  6  7  8 ]
+//[ 9  10 11 12]
+//[ 13 14 15 0 ]
+//где 0 задает пустую ячейку.
+//Достаточно найти хотя бы какое-то решение. Число перемещений костяшек не обязано быть минимальным.
+
 #include <iostream>
 #include <array>
 #include <vector>
 #include <queue>
 #include <map>
+#include <algorithm>
+#include <set>
+#include <cmath>
 
 static const int LINE_SIZE = 4;
 static const int FIELD_SIZE = LINE_SIZE * LINE_SIZE;
 
-using FieldArray = std::array<uint8_t, FIELD_SIZE>;
+using FieldArray = std::array<int, FIELD_SIZE>;
 
 static const FieldArray EMPTY_FIELD = {
         0, 0, 0, 0,
@@ -24,15 +35,23 @@ static const FieldArray GOAL_FIELD = {
         13, 14, 15, 0
 
 };
+enum direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    NODIR
+};
 
 class FieldState {
 public:
-    FieldState() {
+    FieldState() : dist_from_begin(0) {
         init(EMPTY_FIELD);
     }
 
-    FieldState(const FieldArray& arr) {
+    FieldState(const FieldArray& arr) : dist_from_begin(0) {
         init(arr);
+        dir = NODIR;
     }
 
     FieldState(const FieldState&) = default;
@@ -53,36 +72,82 @@ public:
         if (zero_pos >= LINE_SIZE) { // up
             FieldState state(*this);
             state.moveUp();
+            state.dir = DOWN;
             res.push_back(state);
         }
         if (zero_pos < FIELD_SIZE - LINE_SIZE) { // down
             FieldState state(*this);
             state.moveDown();
+            state.dir = UP;
             res.push_back(state);
         }
         if (zero_pos % LINE_SIZE != 0) { // left
             FieldState state(*this);
             state.moveLeft();
+            state.dir = RIGHT;
             res.push_back(state);
         }
         if ((zero_pos + 1) % LINE_SIZE != 0) { // right
             FieldState state(*this);
             state.moveRight();
+            state.dir = LEFT;
             res.push_back(state);
         }
         return res;
     }
 
-    void print() const {
+    bool sol_exists() {
+        int k = zero_pos / LINE_SIZE + 1;
+        int n = 0;
+
         for (int i = 0; i < arr_state.size(); ++i) {
-            std::cout << (int)arr_state[i] << " ";
-            if ((i + 1) % LINE_SIZE == 0) { // right
-                std::cout << std::endl;
+            for (int j = 0; j < i; ++j) {
+                if (arr_state[i] == 0 || arr_state[j] == 0) {
+                    continue;
+                }
+                if (arr_state[j] > arr_state[i]) {
+                    ++n;
+                }
             }
+        }
+        if ((n + k) % 2 == 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 
+    std::string print() const {
+        switch (dir) {
+            case UP:
+                return "U";
+            case DOWN:
+                return "D";
+            case LEFT:
+                return "L";
+            case RIGHT:
+                return "R";
+            case NODIR:
+                return "";
+        }
+    }
 
+    int manhetten_way() {
+        int sum = 0;
+        int k = 3;
+        for (int i = 0; i < FIELD_SIZE; ++i) {
+            if (arr_state[i] == 0) {
+                sum += (abs((i % LINE_SIZE) - 3) + abs((i / LINE_SIZE) - 3));
+            } else {
+                sum += (abs((i % LINE_SIZE) - ((arr_state[i] - 1) % LINE_SIZE)) + abs((i / LINE_SIZE)- ((arr_state[i] - 1) / LINE_SIZE)));
+            }
+        }
+        return  k * sum;
+    }
+
+    int dist_from_begin;
+    int deep;
+    direction dir;
 private:
     void moveUp() {
         int new_zero_pos = zero_pos - LINE_SIZE;
@@ -119,23 +184,29 @@ private:
 
     FieldArray arr_state;
     int zero_pos;
+
 };
 
-
-void bfs(const FieldState& start) {
-    std::queue<FieldState> q;
+void AStar(FieldState& start) {
+    if (!start.sol_exists()) {
+        std::cout << -1 << std::endl;
+        return;
+    }
+    auto comp = [](const FieldState &l, const FieldState &r){ return l.deep <= r.deep; };
+    std::set<FieldState, decltype(comp)> q(comp);
     std::map<FieldState, FieldState> used;
 
     const FieldState goal_state(GOAL_FIELD);
     const FieldState empty_state(EMPTY_FIELD);
 
-    q.push(start);
+    start.dist_from_begin = 0;
+    start.deep = start.manhetten_way();
+    q.insert(start);
     used.insert(std::make_pair(start, empty_state));
     FieldState cur_state(EMPTY_FIELD);
     while(!q.empty()) {
-        cur_state = q.front();
-        q.pop();
-        size_t s = used.size();
+        cur_state = *q.begin();
+        q.erase(q.begin());
 
         if (cur_state == goal_state) {
             break;
@@ -143,35 +214,31 @@ void bfs(const FieldState& start) {
 
         for (FieldState child : cur_state.GetNextVertices()) {
             if (used.find(child) == used.end()) {
+                child.dist_from_begin = cur_state.dist_from_begin + 1;
+                child.deep = child.manhetten_way() + cur_state.dist_from_begin + 1;
+                q.insert(child);
                 used.insert(std::make_pair(child, cur_state));
-                q.push(child);
             }
         }
     }
 
-    if (cur_state == goal_state) {
+    std::string result;
         int steps_count = 0;
         while (!(cur_state == empty_state)) {
-            cur_state.print();
-            std::cout << "-----------" << std::endl;
+            result += cur_state.print();
             cur_state = used.find(cur_state)->second;
             steps_count++;
         }
-        std::cout << steps_count << std::endl;
-    } else {
-        std::cout << "not found" << std::endl;
-    }
-    std::cout << "used count: " << used.size() << std::endl;
+        std::reverse(result.begin(), result.end());
+        std::cout << --steps_count << std::endl << result << std::endl;
 }
 
-
 int main() {
-    FieldState start({
-                             5, 1, 3, 4,
-                             9, 2, 6, 8,
-                             13, 10 ,7, 11,
-                             14, 15, 0, 12
-                     });
-    bfs(start);
+    FieldArray arr;
+    for (int i = 0; i < FIELD_SIZE; ++i) {
+        std::cin >> arr[i];
+    }
+    FieldState start(arr);
+    AStar(start);
     return 0;
 }
